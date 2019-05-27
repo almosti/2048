@@ -8,6 +8,7 @@ using namespace std;
 
 #define N 4
 #define WIDTH 5
+#define TARGET 2048
 
 #define S_FAIL 0
 #define S_WIN 1
@@ -17,10 +18,23 @@ using namespace std;
 class Game2048
 {
 private:
-    /* data */
+	/* data */
 	int data[N][N];
 	int status;
 
+	bool isOver()
+	{
+		for (int i=0;i<N;++i)
+		{
+			for (int j = 0; j < N; ++j)
+			{
+				if ((j + 1 < N) && (data[i][j] * data[i][j + 1] == 0 || data[i][j] == data[i][j + 1])) return false;
+				if ((i + 1 < N) && (data[i][j] * data[i + 1][j] == 0 || data[i][j] == data[i + 1][j])) return false;
+			}
+
+		}
+		return true;
+	}
 
 	void drawItem(int row, int col, char c)
 	{
@@ -57,7 +71,7 @@ private:
 		vector<int> emptyPos;
 		for (int i = 0; i < N; ++i)
 		{
-			for (int j = 0; j < N;++j)
+			for (int j = 0; j < N; ++j)
 			{
 				if (data[i][j] == 0)
 				{
@@ -65,7 +79,7 @@ private:
 				}
 			}
 		}
-		if (emptyPos.size ()==0)
+		if (emptyPos.size() == 0)
 		{
 			return false;
 		}
@@ -75,6 +89,81 @@ private:
 		//10%概率产生4
 		data[value / N][value%N] = rand() % 10 == 1 ? 4 : 2;
 		return true;
+	}
+
+	bool moveLeft()
+	{
+		int tmp[N][N];
+		for (int i = 0; i < N; ++i)
+		{
+			int currentWritePos = 0;
+			int lastValue = 0;
+			for (int j = 0; j < N; ++j)
+			{
+				tmp[i][j] = data[i][j];
+				if (data[i][j] == 0)
+				{
+					continue;
+				}
+
+				if (lastValue==0)
+				{
+					lastValue = data[i][j];
+				}
+				else
+				{
+					if (lastValue == data[i][j])
+					{
+						data[i][currentWritePos] = lastValue * 2;
+						lastValue = 0;
+						if (data[i][currentWritePos]==TARGET)
+						{
+							status = S_WIN;
+						}
+					}
+					else
+					{
+						data[i][currentWritePos] = lastValue;
+						lastValue = data[i][j];
+					}
+					++currentWritePos;
+				}
+				data[i][j] = 0;
+			}
+			if (lastValue != 0)
+			{
+				data[i][currentWritePos] = lastValue;
+			}
+		}
+		for (int i=0;i<N;++i)
+		{
+			for (int j=0;j<N;++j)
+			{
+				if (data[i][j]!=tmp[i][j])
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	void rotate()
+	{
+		int tmp[N][N] = { 0, };
+		for (int i=0;i<N;++i)
+		{
+			for (int j=0;j<N;++j)
+			{
+				tmp[i][j] = data[j][N - 1 - j];
+			}
+		}
+		for (int i = 0; i < N; ++i)
+		{
+			for (int j = 0; j < N; ++j)
+			{
+				data[i][j] = tmp[i][j];
+			}
+		}
 	}
 
 public:
@@ -93,14 +182,53 @@ public:
 		{
 			ch -= 32;
 		}
+		bool updated = false;
+		switch (ch)
+		{
+		case 'A':
+			updated = moveLeft();
+			break;
+		case 'S':
+			rotate();
+			rotate();
+			rotate();
+			updated = moveLeft();
+			rotate();
+			break;
+		case 'D':
+			rotate();
+			rotate();
+			updated = moveLeft();
+			rotate();
+			rotate();
+			break;
+		case 'W':
+			rotate();
+			updated = moveLeft();
+			rotate();
+			rotate();
+			rotate();
+			break;
+		default:
+			break;
+		}
+
+		if (updated)
+		{
+			randNew();
+			if (isOver())
+			{
+				status = S_FAIL;
+			}
+		}
+
 		if (ch=='Q')
 		{
 			status = S_QUIT;
 		}
-		else
+		else if(ch=='R')
 		{
-			//用于测试
-			status = (status + 1) % 3;
+			restart();
 		}
 	}
 
