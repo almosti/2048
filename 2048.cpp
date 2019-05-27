@@ -37,6 +37,46 @@ private:
 			--col;
 		}
 	}
+
+	void restart()
+	{
+		for (int i = 0; i < N; ++i)
+		{
+			for (int j = 0; j < N; ++j)
+			{
+				data[i][j] = 0;
+			}
+		}
+		randNew();
+		randNew();
+		status = S_NORMAL;
+	}
+
+	bool randNew()
+	{
+		vector<int> emptyPos;
+		for (int i = 0; i < N; ++i)
+		{
+			for (int j = 0; j < N;++j)
+			{
+				if (data[i][j] == 0)
+				{
+					emptyPos.push_back(i*N + j);
+				}
+			}
+		}
+		if (emptyPos.size ()==0)
+		{
+			return false;
+		}
+
+		int value = emptyPos[rand() % emptyPos.size()];
+
+		//10%概率产生4
+		data[value / N][value%N] = rand() % 10 == 1 ? 4 : 2;
+		return true;
+	}
+
 public:
 	Game2048(/* args */):status(S_NORMAL)
 	{
@@ -59,6 +99,7 @@ public:
 		}
 		else
 		{
+			//用于测试
 			status = (status + 1) % 3;
 		}
 	}
